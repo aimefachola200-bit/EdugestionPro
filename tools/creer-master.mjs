@@ -13,7 +13,7 @@ const [dest, srcArg] = process.argv.slice(2);
 if (!dest) { console.error('Usage : node tools/creer-master.mjs <destination> [source]'); process.exit(1); }
 const src = srcArg || join(ici, '..'), M = join(ici, 'master');
 const GARDER = new Set(['.git', '.gitignore']);   // ce que la destination garde à elle
-const SAUTER = new Set(['.git', 'tools', 'node_modules', '.github']);
+const SAUTER = new Set(['.git', 'tools', 'node_modules']);
 
 if (existsSync(dest)) for (const n of readdirSync(dest)) if (!GARDER.has(n) && !n.endsWith('.zip')) rmSync(join(dest, n), { recursive: true, force: true });
 (function copier(s, d, racine) {
