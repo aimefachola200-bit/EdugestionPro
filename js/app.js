@@ -359,10 +359,17 @@
       oninput: e => filtrerMenu(aside, e.target.value)
     });
     aside.appendChild(champ);
-    if (MENU_TERRITOIRE_ROLES.indexOf(user.role) >= 0) { menuTerritoire(aside, lien); return aside; }
+    const blocMempCp = EG.EspaceMempCp ? EG.EspaceMempCp.blocMenu(lien) : null;
+    if (MENU_TERRITOIRE_ROLES.indexOf(user.role) >= 0) {
+      menuTerritoire(aside, lien);
+      /* L'espace MEMP-CP vient juste après le menu principal. */
+      if (blocMempCp) aside.insertBefore(blocMempCp, aside.querySelectorAll('.menu-categorie')[1] || aside.querySelector('.menu-vide'));
+      return aside;
+    }
     aside.appendChild(lien('accueil', '🏠', 'Accueil', 'menu-accueil'));
     /* La liste complète des modules reste à portée de clic sur ordinateur comme sur téléphone. */
     if (!['PARENT', 'ELEVE'].includes(user.role)) aside.appendChild(lien('modules', '🧩', 'Tous les modules', 'menu-accueil'));
+    if (blocMempCp) aside.appendChild(blocMempCp);
 
     (EG.CATEGORIES_MODULES || []).forEach(cat => {
       const modules = EG.MODULES.filter(m => m.cat === cat.code && EG.peutVoirModule(m.code));
@@ -471,7 +478,7 @@
     U.modal('Mon compte', el('div', {}, [
       el('p', {}, [el('strong', { text: (u.prenoms || '') + ' ' + u.nom }), el('br'), document.createTextNode(U.libelle(u.role))]),
       el('p', { class: 'muet', text: EG.session.ecole_nom + ' • année ' + EG.session.annee_code }),
-      el('p', { class: 'muet petit', text: 'ÉduGestion Pro V5.2 — fonctionne hors ligne, les données restent sur cet appareil jusqu’à la synchronisation.' }),
+      el('p', { class: 'muet petit', text: 'ÉduGestion Pro V5.8 — fonctionne hors ligne, les données restent sur cet appareil jusqu’à la synchronisation.' }),
       el('p', { class: 'muet petit', text: u.signature_image ? 'Signature enregistrée : elle est apposée sur les documents que vous éditez.' : 'Aucune signature enregistrée : vos documents porteront un emplacement à signer à la main.' }),
       el('div', { class: 'barre-actions' }, [
         el('button', {

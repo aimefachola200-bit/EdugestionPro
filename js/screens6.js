@@ -229,7 +229,7 @@
       + ech(U.dateCourte(new Date().toISOString())) + '</p>'
       + '<div class="bloc-signature fiche-signature">'
       + EG.Docs.caseSignature(ctx.signataire, mention)
-      + '<div class="cachet-case">' + EG.Docs.cachet(ctx.ecole) + '</div>'
+      + '<div class="cachet-case">' + EG.Docs.cachetComplet(ctx.ecole) + '</div>'
       + '</div>'
       + visas
       + '</div>';

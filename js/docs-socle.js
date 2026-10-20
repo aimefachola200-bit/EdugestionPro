@@ -81,6 +81,81 @@
   }
 
   /* =======================================================================
+     Cachet rectangulaire du nom (« griffe ») — même dessin que SCOLARIS,
+     GESCOL et MEMP-CP : bord double (trait épais + trait fin), coins droits,
+     2 à 3 lignes centrées en majuscules — titre ou fonction, NOM Prénoms,
+     ligne facultative (grade, qualité). La taille s'ajuste à la largeur.
+     ======================================================================= */
+
+  let _mesure = null;
+  function largeurTexte(t, taille, gras) {
+    try {
+      _mesure = _mesure || document.createElement('canvas').getContext('2d');
+      _mesure.font = (gras ? 'bold ' : '') + taille + 'px Arial, Helvetica, sans-serif';
+      return _mesure.measureText(t).width;
+    } catch (e) { return t.length * taille * (gras ? 0.66 : 0.58); }
+  }
+  function lignesGriffe(lignes) {
+    return (lignes || []).map(l => String(l || '').replace(/\s+/g, ' ').trim().toUpperCase()).filter(Boolean).slice(0, 3);
+  }
+
+  /** Griffe en SVG (largeur en pixels, hauteur calculée). Rend '' sans aucune ligne. */
+  function griffe(lignes, couleur, largeur) {
+    lignes = lignesGriffe(lignes);
+    if (!lignes.length) return '';
+    const L = largeur || 230, col = COULEURS_CACHET[couleur] || couleur || COULEURS_CACHET.BLEU;
+    const base = L / 19, pad = L * 0.06, dispo = L - 2 * pad;
+    const spec = lignes.map((t, i) => {
+      const gras = i === 1 || i === 0 || lignes.length === 1;
+      let taille = (i === 1 || (i === 0 && lignes.length === 1)) ? base * 1.3 : (i === 0 ? base : base * 0.92);
+      const w = largeurTexte(t, taille, gras);
+      if (w > dispo && w) taille = Math.max(taille * dispo / w, 3);
+      return { t, gras, taille };
+    });
+    const hTexte = spec.reduce((a, x) => a + x.taille * 1.3, 0), H = hTexte + 2 * pad;
+    let y = (H - hTexte) / 2;
+    const textes = spec.map(x => { y += x.taille * 1.3; return '<text x="' + (L / 2).toFixed(1) + '" y="' + (y - x.taille * 0.3).toFixed(2) + '" font-size="' + x.taille.toFixed(2) + '" font-weight="' + (x.gras ? 700 : 400) + '">' + echapper(x.t) + '</text>'; }).join('');
+    return '<svg class="griffe" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + L.toFixed(1) + ' ' + H.toFixed(1) + '" width="' + L.toFixed(0) + '" height="' + H.toFixed(0) + '"'
+      + ' role="img" aria-label="Cachet rectangulaire : ' + echapper(lignes.join(' / ')) + '">'
+      + '<g fill="none" stroke="' + col + '" opacity="0.92"><rect x="1.6" y="1.6" width="' + (L - 3.2).toFixed(1) + '" height="' + (H - 3.2).toFixed(1) + '" stroke-width="2.4"/>'
+      + '<rect x="' + (1.6 + pad * 0.55).toFixed(1) + '" y="' + (1.6 + pad * 0.55).toFixed(1) + '" width="' + (L - 3.2 - pad * 1.1).toFixed(1) + '" height="' + (H - 3.2 - pad * 1.1).toFixed(1) + '" stroke-width="0.8"/></g>'
+      + '<g fill="' + col + '" font-family="Arial, Helvetica, sans-serif" opacity="0.92" text-anchor="middle">' + textes + '</g></svg>';
+  }
+
+  /** Griffe d'une école : « LE DIRECTEUR » (ou le titre choisi), le nom du directeur, une 3e ligne facultative. */
+  function griffeEcole(ecole, largeur) {
+    ecole = ecole || {};
+    const nom = ecole.griffe_nom || ecole.directeur_nom || '';
+    if (!nom) return '';
+    return griffe([ecole.griffe_titre || (ecole.cachet_centre && !/^LE DIRECTEUR$/i.test(ecole.cachet_centre) ? ecole.cachet_centre : 'LE DIRECTEUR'), nom, ecole.griffe_ligne3],
+      ecole.griffe_couleur || ecole.cachet_couleur || 'BLEU', largeur);
+  }
+
+  /** Griffe d'une circonscription (chef de CS) ou d'une direction départementale (DDEMP). */
+  function griffeTerritoire(t, largeur) {
+    t = t || {};
+    const nom = t.griffe_nom || t.responsable || '';
+    if (!nom) return '';
+    const titre = t.griffe_titre || (t.type === 'DEPARTEMENT' ? 'LE DIRECTEUR DÉPARTEMENTAL' : 'LE CHEF DE LA CIRCONSCRIPTION SCOLAIRE');
+    return griffe([titre, nom, t.griffe_ligne3], t.griffe_couleur || t.cachet_couleur || 'BLEU', largeur);
+  }
+
+  /** Cachet rond et/ou rectangulaire selon la forme choisie : ROND_ET_GRIFFE (par défaut), ROND, RECTANGULAIRE. */
+  function assembler(rond, rect, forme) {
+    if (!rect || forme === 'ROND') return rond;
+    if (forme === 'RECTANGULAIRE') return '<span class="cachets-duo">' + rect + '</span>';
+    return '<span class="cachets-duo">' + rond + rect + '</span>';
+  }
+  function cachetComplet(ecole, options) {
+    ecole = ecole || {};
+    return assembler(cachet(ecole, options), griffeEcole(ecole, options && options.largeurGriffe), ecole.cachet_type || 'ROND_ET_GRIFFE');
+  }
+  function cachetTerritoireComplet(t, options) {
+    t = t || {};
+    return assembler(cachetTerritoire(t, options), griffeTerritoire(t, options && options.largeurGriffe), t.cachet_type || 'ROND_ET_GRIFFE');
+  }
+
+  /* =======================================================================
      Code QR de vérification
      ======================================================================= */
 
@@ -146,7 +221,7 @@
     return '<div class="bloc-signature">'
       + (titulaire ? caseSignature(titulaire, 'Le titulaire de la classe') : '')
       + caseSignature(user, mention === '' ? '' : (mention || 'Le directeur'))
-      + '<div class="cachet-case">' + cachet(ecole) + '</div>'
+      + '<div class="cachet-case">' + cachetComplet(ecole) + '</div>'
       + '</div>';
   }
 
@@ -192,7 +267,7 @@
     return '<p class="fait-a">Fait à ' + echapper(t.ville || '……………………') + ', le ' + '……………………' + '</p>'
       + '<div class="bloc-signature">'
       + caseSignature({ nom: t.responsable || '' }, mention || (t.type === 'DEPARTEMENT' ? 'Le Directeur départemental' : 'Le Chef de la circonscription scolaire'))
-      + '<div class="cachet-case">' + cachetTerritoire(t) + '</div></div>';
+      + '<div class="cachet-case">' + cachetTerritoireComplet(t) + '</div></div>';
   }
 
   /**
@@ -263,13 +338,9 @@
 
   /** Bandeau du ministère, repris du modèle transmis par la DDEMP. */
   function enteteMEMP(departement, service) {
-    const logo = (global.location && location.href)
-      ? new URL('assets/entete-memp.jpg', location.href).href : 'assets/entete-memp.jpg';
+    /* Même en-tête que l'application MEMP-CP : bandeau officiel (armoiries, ministère, coordonnées). */
     return '<div class="entete-memp">'
-      + '<img src="' + logo + '" alt="Ministère des Enseignements Maternel et Primaire — République du Bénin">'
-      + '<div class="entete-coordonnees">'
-      + '01 BP 10 Porto-Novo<br>Tél. : +229 20 21 52 22 • Fax : +229 20 21 52 22<br>'
-      + 'E-mail : mempmatprim@gmail.com</div>'
+      + '<img class="entete-bandeau" src="' + ressource('embleme-memp.png') + '" alt="République du Bénin — Ministère des Enseignements Maternel et Primaire — 01 BP 10 Porto-Novo">'
       + '</div>'
       + '<div class="entete-direction">Direction Départementale des Enseignements Maternel et Primaire : '
       + '<strong>' + echapper(departement || '—') + '</strong><br>'
@@ -277,29 +348,27 @@
   }
 
   /**
-   * En-tête administratif court, apposé sur toutes les pièces éditées qui n'ont
-   * pas déjà leur propre en-tête officiel.
+   * En-tête administratif, apposé sur toutes les pièces éditées qui n'ont pas
+   * déjà leur propre en-tête officiel : le bandeau du MEMP (comme MEMP-CP,
+   * SCOLARIS et GESCOL), puis direction départementale, circonscription, école.
    */
   function enteteAdministratif(ecole, contexte) {
     contexte = contexte || {};
+    const lignes = [
+      contexte.departement ? 'Direction Départementale des Enseignements Maternel et Primaire — ' + echapper(contexte.departement) : '',
+      contexte.circonscription ? 'Circonscription scolaire de ' + echapper(String(contexte.circonscription).replace(/^CS\s+/i, '')) : ''
+    ].filter(Boolean);
     return '<div class="entete-admin">'
-      + '<img class="entete-armoiries" src="' + ressource('armoiries-benin.png')
-      + '" alt="Armoiries de la République du Bénin">'
+      + '<img class="entete-bandeau" src="' + ressource('embleme-memp.png') + '" alt="République du Bénin — Ministère des Enseignements Maternel et Primaire">'
       + '<div class="entete-admin-centre">'
-      + '<strong>RÉPUBLIQUE DU BÉNIN</strong>'
-      + '<span>Ministère des Enseignements Maternel et Primaire</span>'
-      + (contexte.departement ? '<span>Direction Départementale de ' + echapper(contexte.departement) + '</span>' : '')
-      + (contexte.circonscription ? '<span>Circonscription scolaire de '
-        + echapper(String(contexte.circonscription).replace(/^CS\s+/i, '')) + '</span>' : '')
-      + '<span class="entete-ecole">' + echapper(ecole ? ecole.nom : '') + '</span>'
-      + '</div>'
-      + '<img class="entete-logo" src="' + ressource('entete-memp.jpg')
-      + '" alt="Ministère des Enseignements Maternel et Primaire">'
-      + '</div>';
+      + lignes.map(l => '<span>' + l + '</span>').join('')
+      + (ecole && ecole.nom ? '<span class="entete-ecole">' + echapper(ecole.nom) + '</span>' : '')
+      + '</div></div>';
   }
 
   Object.assign(EG.Docs, {
     echapper, ressource, cachet, COULEURS_CACHET, cachetTerritoire, mentionsTerritoire, visaEcole, visaTerritoire,
+    griffe, griffeEcole, griffeTerritoire, cachetComplet, cachetTerritoireComplet,
     adresseVerification, qrDocument, qrEleve,
     caseSignature, blocSignature, capturerSignature,
     enteteMEMP, enteteAdministratif

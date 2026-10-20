@@ -40,6 +40,8 @@
       };
       req.onsuccess = e => {
         _db = e.target.result;
+        /* L'espace CP intégré (memp-cp/) lit la base de cette application-ci, pas celle d'une autre servie à la même adresse. */
+        try { sessionStorage.setItem('eg-db', DB_NAME); } catch (x) { /* stockage de session indisponible */ }
         /* Ne jamais bloquer une future mise à jour faite depuis une autre fenêtre. */
         _db.onversionchange = () => {
           try { _db.close(); } catch (x) { /* déjà fermée */ }
@@ -70,6 +72,7 @@
   }
 
   const DB = {
+    NOM: DB_NAME,
     uuid,
     open,
 

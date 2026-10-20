@@ -1,4 +1,4 @@
-# ÉduGestion Pro V5.7
+# ÉduGestion Pro V5.8
 
 Application de gestion des écoles maternelles et primaires du Bénin, conforme à la
 spécification V5.2. Elle s'installe sur téléphone, tablette et ordinateur, et
@@ -126,6 +126,44 @@ d'exemple des versions précédentes (codes EP001, EP002 et EM010) et tout ce qu
 dépendait — élèves, classes, notes, agents, budget, comptes `dir.ep001`, `ens.cm2` et
 `parent.demo`. Seules les écoles dont le code **et** le nom sont ceux de l'exemple sont
 concernées : les écoles saisies par les utilisateurs ne sont jamais touchées.
+
+### Nouveautés de la version 5.8 — espace CP, CCS et DDEMP, appareil photo, cachets, installation
+
+**Espace CP · CCS · DDEMP (MEMP-CP intégré)** (`js/espace-memp-cp.js`, dossier `memp-cp/`). Les conseillers
+pédagogiques, les chefs de circonscription, les directions départementales et l'administration ont un bloc de menu
+« Espace CP · CCS · DDEMP » qui ouvre, **à l'identique**, l'application MEMP-CP : fiches de recensement, de rentrée
+et de fin d'année ; effectifs par âge (moins de 5 ans à 16 ans et plus), par sexe et par cours, avec pourcentages et
+écart type, maternelles par section (SP, SG) ; infrastructures et mobilier ; écoles (salles autorisées, ouvertes,
+simples, jumelées, multigrades, eau, électricité…) ; CEP (candidats par sexe, réussite) ; rapports et bilans ; personnel
+et carrière ; emplois du temps, calendrier, règlement intérieur et documents officiels ; mêmes calculs, mêmes en-têtes,
+cachets rond et rectangulaire, QR de vérification. L'espace s'ouvre **avec le compte déjà connecté** (même périmètre :
+zone du CP, circonscription du CCS, département du DDEMP, tout le pays pour l'administration) et reprend à chaque
+ouverture les écoles, les zones et le personnel du périmètre depuis ÉduGestion. Le rôle DDEMP y consulte tout son
+département (sans saisir ni valider à la place du CCS). Le dossier `memp-cp/` se régénère depuis l'application MEMP-CP :
+`node tools/creer-jumelle.mjs edugestion <ce dossier>/memp-cp` (dans le dépôt memp-cp-app).
+
+**Appareil photo** (`js/camera.js`). Chaque champ photo de l'application (élève, agent, école, courrier scanné, pièce
+jointe…) reçoit un bouton « 📷 Appareil photo » : caméra arrière par défaut, bascule avant ⇄ arrière fiable (même
+méthode que SCOLARIS et GESCOL), la photo remplit le champ comme un fichier choisi.
+
+**Fiche d'inscription avec la carte d'identité** (`EG.Docs.ficheInscription`). L'inscription d'un élève prend sa photo,
+le père, la mère et le téléphone des parents ; la fiche d'inscription (identité, scolarité, parents, signature du
+parent) porte la **carte d'identité scolaire recto-verso** à découper, avec la photo. Bouton « 🪪 Fiche d'inscription +
+carte d'identité » dans le dossier de chaque élève. La carte d'identité affiche désormais la photo de l'élève.
+
+**Cachets rond et rectangulaire** (`js/docs-socle.js`, écran *Cachets et signatures*). En plus du cachet rond, chaque
+école, circonscription et direction départementale a son **cachet rectangulaire du nom** (griffe : titre, nom, 3e ligne
+facultative), comme SCOLARIS, GESCOL et MEMP-CP. Forme apposée au choix : rond et rectangulaire (par défaut), rond seul,
+rectangulaire seul.
+
+**En-têtes** : toutes les pièces administratives portent le bandeau officiel du MEMP, le même que dans MEMP-CP
+(armoiries, ministère, coordonnées), puis la direction départementale, la circonscription et l'école.
+
+**Installation comme SCOLARIS et GESCOL** : application Android (.apk) et installateur Windows (.exe), fabriqués
+chaque nuit, sur la page de téléchargement commune (un seul QR code pour toutes les applications) :
+https://aimefachola200-bit.github.io/cs-pobe/telecharger.html — ou directement
+https://github.com/aimefachola200-bit/scolaris/releases/tag/edugestion. La variante **ÉduGestion Pro Master** se
+fabrique depuis cette même source : `node tools/creer-master.mjs <dossier>`.
 
 ### Nouveautés de la version 5.7 — statuts du personnel, présences par demi-journée, écoles privées, carrières
 
