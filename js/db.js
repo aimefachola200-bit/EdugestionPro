@@ -4,7 +4,7 @@
 
   const EG = global.EG;
   const DB_NAME = 'edugestion_pro';
-  const DB_VERSION = 12;
+  const DB_VERSION = 13;
   const SYSTEM_STORES = ['outbox', 'meta'];
   const ALL_STORES = EG.STORES.concat(SYSTEM_STORES);
 
