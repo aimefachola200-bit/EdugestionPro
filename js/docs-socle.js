@@ -35,49 +35,61 @@
    * et choisit l'encre, bleue ou rouge.
    */
   function cachet(ecole, options) {
+    /* Même dessin que SCOLARIS, GESCOL et MEMP-CP : trois cercles, texte de l'arc supérieur et de l'arc
+       inférieur posé lettre par lettre (largeur réelle de chaque lettre), une étoile de chaque côté, et le texte
+       central centré dans le cercle intérieur — sur une à trois lignes (« | » force un retour à la ligne). */
     options = options || {};
     ecole = ecole || {};
     const encre = COULEURS_CACHET[options.couleur || ecole.cachet_couleur || 'BLEU'] || COULEURS_CACHET.BLEU;
-    const haut = (options.haut || ecole.cachet_haut || 'RÉPUBLIQUE DU BÉNIN').toUpperCase();
-    const centre = options.centre || ecole.cachet_centre || 'LE DIRECTEUR';
-    const brut = options.bas || ecole.cachet_bas || ecole.nom || 'ÉCOLE';
-    const bas = brut.length > 34 ? brut.slice(0, 33) + '…' : brut;
+    const haut = String(options.haut || ecole.cachet_haut || 'RÉPUBLIQUE DU BÉNIN').toUpperCase().trim();
+    const centre = String(options.centre || ecole.cachet_centre || 'LE DIRECTEUR').toUpperCase().trim();
+    const bas = String(options.bas || ecole.cachet_bas || ecole.nom || 'ÉCOLE').toUpperCase().trim();
     const taille = options.taille || 118;
-    const id = 'c' + Math.random().toString(36).slice(2, 8);
-
-    /* Les deux étoiles marquent la césure entre l'arc du haut et celui du bas. */
-    const etoile = (x, y, r) => '<path transform="translate(' + x + ' ' + y + ') scale(' + (r / 10) + ')"'
-      + ' d="M0 -10 L2.9 -3.1 10.4 -3.1 4.3 1.5 6.7 8.8 0 4.4 -6.7 8.8 -4.3 1.5 -10.4 -3.1 -2.9 -3.1 Z"'
-      + ' fill="' + encre + '"/>';
-
-    /* Les deux arcs de texte courent tous les deux sur le même anneau, entre
-       le cercle extérieur (r 94) et le cercle intérieur (r 80) — exactement
-       comme sur les cachets de l'application de gestion des CS — avec une
-       courte coupure de part et d'autre de chaque étoile pour que le texte
-       ne les chevauche pas. */
-    return '<svg class="cachet" width="' + taille + '" height="' + taille + '" viewBox="0 0 200 200"'
-      + ' xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cachet — ' + echapper(centre) + '">'
-      + '<defs>'
-      + '<path id="h' + id + '" d="M 16.9,77.7 A 86,86 0 0 1 183.1,77.7"/>'
-      + '<path id="b' + id + '" d="M 16.9,122.3 A 86,86 0 0 0 183.1,122.3"/>'
-      + '</defs>'
-      + '<circle cx="100" cy="100" r="94" fill="none" stroke="' + encre + '" stroke-width="4"/>'
-      + '<circle cx="100" cy="100" r="80" fill="none" stroke="' + encre + '" stroke-width="1.5"/>'
-      + '<text font-size="' + (haut.length > 26 ? 8.5 : 10) + '" font-weight="700" fill="' + encre + '"'
-      + ' text-anchor="middle" font-family="Helvetica, Arial, sans-serif" letter-spacing="0.3">'
-      + '<textPath href="#h' + id + '" startOffset="50%">' + echapper(haut) + '</textPath></text>'
-      + '<text font-size="' + (bas.length > 26 ? 7.5 : 9) + '" font-weight="600" fill="' + encre + '"'
-      + ' text-anchor="middle" font-family="Helvetica, Arial, sans-serif" letter-spacing="0.3">'
-      + '<textPath href="#b' + id + '" startOffset="50%">' + echapper(bas) + '</textPath></text>'
-      + etoile(14, 100, 7) + etoile(186, 100, 7)
-      + '<text x="100" y="' + (centre.length > 18 ? 96 : 100) + '" font-size="'
-      + (centre.length > 24 ? 11 : (centre.length > 14 ? 13.5 : 17)) + '" font-weight="700" fill="' + encre + '"'
-      + ' text-anchor="middle" font-family="Helvetica, Arial, sans-serif" letter-spacing="0.5">'
-      + echapper(centre.length > 30 ? centre.slice(0, 29) + '…' : centre) + '</text>'
-      + (ecole.code_ecole ? '<text x="100" y="' + (centre.length > 18 ? 118 : 120) + '" font-size="10"'
-        + ' font-weight="600" fill="' + encre + '" text-anchor="middle"'
-        + ' font-family="Helvetica, Arial, sans-serif">' + echapper(ecole.code_ecole) + '</text>' : '')
-      + '</svg>';
+    const T = 200, r = T / 2, rt = r * 0.74, fs = r * 0.17;
+    const parts = ['<svg class="cachet" width="' + taille + '" height="' + taille + '" viewBox="0 0 ' + T + ' ' + T + '"'
+      + ' xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cachet — ' + echapper(centre.replace(/\|/g, ' ')) + '">',
+      '<g fill="none" stroke="' + encre + '" opacity="0.92">'
+      + '<circle cx="' + r + '" cy="' + r + '" r="' + (r - 3) + '" stroke-width="3.2"/>'
+      + '<circle cx="' + r + '" cy="' + r + '" r="' + (r - 8) + '" stroke-width="1"/>'
+      + '<circle cx="' + r + '" cy="' + r + '" r="' + (r * 0.56) + '" stroke-width="1.4"/></g>',
+      '<g fill="' + encre + '" font-family="Arial, Helvetica, sans-serif" font-weight="700" opacity="0.92">'];
+    const rad = d => d * Math.PI / 180, deg = x => x * 180 / Math.PI;
+    function arc(texte, enHaut) {
+      if (!texte) return;
+      let t = fs;
+      let larg = Array.from(texte).map(ch => largeurTexte(ch, t, true) + t * 0.08);
+      let total = deg(larg.reduce((a, b) => a + b, 0) / rt);
+      if (total > 150) { const f = 150 / total; t *= f; larg = larg.map(w => w * f); total = 150; }
+      let cumul = 0;
+      Array.from(texte).forEach((ch, k) => {
+        const pas = deg(larg[k] / rt), milieu = cumul + pas / 2; cumul += pas;
+        const a = enHaut ? 90 + total / 2 - milieu : 270 - total / 2 + milieu, rot = enHaut ? 90 - a : 270 - a;
+        const x = r + rt * Math.cos(rad(a)), y = r - rt * Math.sin(rad(a));
+        parts.push('<text x="' + x.toFixed(2) + '" y="' + y.toFixed(2) + '" font-size="' + t.toFixed(2) + '" text-anchor="middle" dominant-baseline="central"'
+          + ' transform="rotate(' + rot.toFixed(2) + ' ' + x.toFixed(2) + ' ' + y.toFixed(2) + ')">' + echapper(ch) + '</text>');
+      });
+    }
+    arc(haut, true); arc(bas, false);
+    [0, 180].forEach(a => parts.push('<text x="' + (r + rt * Math.cos(rad(a))).toFixed(2) + '" y="' + r + '" font-size="' + (fs * 1.1).toFixed(2)
+      + '" text-anchor="middle" dominant-baseline="central">★</text>'));
+    /* Texte central : coupé en lignes équilibrées s'il est long, puis taille ajustée pour tenir dans le cercle intérieur. */
+    let lignes = centre.split('|').map(x => x.trim()).filter(Boolean);
+    if (lignes.length === 1 && lignes[0].length > 14) {
+      const mots = lignes[0].split(/\s+/), n = lignes[0].length > 28 ? 3 : 2, cible = lignes[0].length / n;
+      lignes = []; let cur = '';
+      mots.forEach(m => { if (cur && (cur + ' ' + m).length > cible + 3 && lignes.length < n - 1) { lignes.push(cur); cur = m; } else cur = cur ? cur + ' ' + m : m; });
+      if (cur) lignes.push(cur);
+    }
+    if (!lignes.length) lignes = [''];
+    let fc = r * 0.2;
+    const maxW = r * 0.98, w = Math.max.apply(null, lignes.map(l => largeurTexte(l, fc, true)));
+    if (w > maxW) fc *= maxW / w;
+    fc = Math.min(fc, (r * 0.98) / (lignes.length * 1.2));
+    const y0 = r - (lignes.length - 1) * fc * 0.6;
+    lignes.forEach((l, k) => parts.push('<text x="' + r + '" y="' + (y0 + k * fc * 1.2).toFixed(2) + '" font-size="' + fc.toFixed(2)
+      + '" text-anchor="middle" dominant-baseline="central">' + echapper(l) + '</text>'));
+    parts.push('</g></svg>');
+    return parts.join('');
   }
 
   /* =======================================================================
