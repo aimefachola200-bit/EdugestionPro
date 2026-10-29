@@ -74,4 +74,13 @@ if (existsSync(cp)) {
   writeFileSync(sw, readFileSync(sw, 'utf8').replace(RE, `const BUILD = '${v}';`));
   writeFileSync(join(cp, 'sw-assets.json'), JSON.stringify({ version: v, files: ['./', ...liste] }, null, 1));
 }
+/* ---- version : version.txt, EG.VERSION et cache du service worker toujours identiques ---- */
+{
+  const v = (readFileSync(join(dest, 'sw.js'), 'utf8').match(/const CACHE = PREFIXE \+ '([0-9.]+)';/) || [])[1];
+  if (v) {
+    writeFileSync(join(dest, 'version.txt'), v + '\n');
+    const sch = join(dest, 'js', 'schema.js');
+    writeFileSync(sch, readFileSync(sch, 'utf8').replace(/global\.EG\.VERSION = '[^']*';/, `global.EG.VERSION = '${v}';`));
+  }
+}
 console.log('ÉduGestion Pro Master prête dans ' + dest);
