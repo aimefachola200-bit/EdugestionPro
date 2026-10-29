@@ -46,6 +46,8 @@ for (const f of fichiers(dest)) {
   if (f.endsWith(join('js', 'db.js'))) t = t.replace("const DB_NAME = 'edugestion_pro';",
     "/* Variante Master : sur github.io, où ÉduGestion Pro est servie à la même adresse, une base à elle ; ailleurs la base\n     d'origine (les données déjà saisies sur l'adresse de la Master restent en place). */\n  const DB_NAME = (global.location && /github\\.io$/.test(location.hostname)) ? 'edugestion_pro_master' : 'edugestion_pro';");
   if (f.endsWith('sw.js')) t = t.replace("const PREFIXE = 'edugestion-v';", "const PREFIXE = 'edugestion-master-v';");
+  // page de vérification : même base que la Master (sur github.io, la Pro et la Master partagent l'adresse)
+  if (f.endsWith('verification.html')) t = t.replace("indexedDB.open('edugestion_pro')", "indexedDB.open((location && /github\\.io$/.test(location.hostname)) ? 'edugestion_pro_master' : 'edugestion_pro')");
   if (f.endsWith(join('css', 'app.css'))) t = t.replace(/  background:\n    linear-gradient\(to bottom, var\(--jaune\) 0 50%, var\(--rouge\) 50% 100%\) right \/ 58% 100% no-repeat,\n    var\(--primaire\);/,
     '  background: url(../icons/icon-192.png) center / cover no-repeat;');
   if (t !== avant) writeFileSync(f, t);
