@@ -85,4 +85,7 @@ if (existsSync(cp)) {
     writeFileSync(sch, readFileSync(sch, 'utf8').replace(/global\.EG\.VERSION = '[^']*';/, `global.EG.VERSION = '${v}';`));
   }
 }
+// vérifications lancées par la publication (liste de blocage, anciennetés) : copiées telles quelles
+mkdirSync(join(dest, 'tools'), { recursive: true });
+for (const n of ['verifier-filigrane.mjs', 'test-anciennete.mjs']) if (existsSync(join(src, 'tools', n))) copyFileSync(join(src, 'tools', n), join(dest, 'tools', n));
 console.log('ÉduGestion Pro Master prête dans ' + dest);
