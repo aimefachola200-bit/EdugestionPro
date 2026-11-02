@@ -1,5 +1,5 @@
 {
- "version": "7d908eff0153",
+ "version": "1f484f913de9",
  "files": [
   "./",
   "LISEZ-MOI.pdf",
@@ -54,6 +54,7 @@
   "js/camera.js",
   "js/carriere.js",
   "js/choix.js",
+  "js/classes.js",
   "js/config.js",
   "js/data.js",
   "js/db.js",

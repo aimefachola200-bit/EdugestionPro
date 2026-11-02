@@ -87,5 +87,5 @@ if (existsSync(cp)) {
 }
 // vérifications lancées par la publication (liste de blocage, anciennetés) : copiées telles quelles
 mkdirSync(join(dest, 'tools'), { recursive: true });
-for (const n of ['verifier-filigrane.mjs', 'test-anciennete.mjs', 'test-territoire.cjs']) if (existsSync(join(src, 'tools', n))) copyFileSync(join(src, 'tools', n), join(dest, 'tools', n));
+for (const n of ['verifier-filigrane.mjs', 'test-anciennete.mjs', 'test-territoire.cjs', 'test-classes.cjs']) if (existsSync(join(src, 'tools', n))) copyFileSync(join(src, 'tools', n), join(dest, 'tools', n));
 console.log('ÉduGestion Pro Master prête dans ' + dest);
